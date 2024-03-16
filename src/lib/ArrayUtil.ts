@@ -10,3 +10,16 @@ export function flattenUint8Array(array: Uint8Array[]): Uint8Array {
 
   return result;
 }
+
+export function xorArray(a: Uint8Array, b: Uint8Array): Uint8Array {
+  if (a.length !== b.length) {
+    throw new Error("Array length mismatch");
+  }
+
+  const result = new Uint8Array(a.length);
+  for (let i = 0; i < a.length; i++) {
+    result[i] = a[i] ^ b[i];
+  }
+
+  return result;
+}
