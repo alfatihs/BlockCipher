@@ -145,28 +145,6 @@ export function subtituteInv(data: Uint8Array): Uint8Array {
   return result;
 }
 
-export function unpackBit(data: Uint8Array): number[] {
-  const result = [] as number[];
-
-  for (let i = 0; i < data.length; i++) {
-    for (let j = 0; j < 8; j++) {
-      result.push((data[i] >> j) & 1);
-    }
-  }
-
-  return result;
-}
-
-export function packBit(data: number[]): Uint8Array {
-  const result = new Uint8Array(Math.ceil(data.length / 8));
-
-  for (let i = 0; i < data.length; i++) {
-    result[Math.floor(i / 8)] |= data[i] << i % 8;
-  }
-
-  return result;
-}
-
 export function permuteBit(data: Uint8Array, map: number[]): Uint8Array {
   if (data.length != 16) {
     throw new Error("Invalid data length");
