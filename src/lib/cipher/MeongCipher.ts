@@ -1,7 +1,6 @@
 import { xorArray } from "../ArrayUtil";
-import { matrixMultiplication, multiplyMatrixMod } from "../Matrix";
+import { matrixMultiplication } from "../Matrix";
 import { Cipher } from "./Cipher";
-import * as mathjs from "mathjs";
 
 const N_ROUND = 10;
 
@@ -67,10 +66,6 @@ export class MeongCipher implements Cipher {
   private mixFunction(iteration: number, block: Uint8Array): Uint8Array {
     return matrixMultiplication(block, this.keys[iteration]);
   }
-}
-
-export function matrixToUint8Array(matrix: mathjs.Matrix): Uint8Array {
-  return new Uint8Array(mathjs.reshape(matrix, [8]).toArray() as number[]);
 }
 
 export function splitBlock(data: Uint8Array): Uint8Array[] {

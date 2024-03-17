@@ -10,7 +10,6 @@ import {
   splitBlock,
   mergeBlock,
   MeongCipher,
-  matrixToUint8Array,
 } from "@/lib/cipher/MeongCipher";
 import * as mathjs from "mathjs";
 
@@ -250,17 +249,5 @@ describe("Splitting Test", () => {
     const joined = mergeBlock([left, right]);
 
     expect(joined).toStrictEqual(data);
-  });
-});
-
-describe("Matrix to Uint8Array test", () => {
-  it("shoud able to convert matrix to Uint8Array", () => {
-    const matrix = mathjs.matrix([
-      [1, 2, 3, 4],
-      [5, 6, 7, 8],
-    ]);
-
-    const result = matrixToUint8Array(matrix);
-    expect(result).toStrictEqual(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]));
   });
 });
