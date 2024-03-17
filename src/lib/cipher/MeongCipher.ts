@@ -95,7 +95,9 @@ export function roundKeyGeneration(masterKey: Uint8Array): Uint8Array[] {
   let key = masterKey;
 
   for (let i = 0; i < N_ROUND; i++) {
-    key = matrixMultiplication(multiplier, key);
+    key = matrixMultiplication(multiplier, key).map(
+      (v, i) => v + (adder[i] % 256)
+    );
     result.push(key);
   }
 
@@ -284,4 +286,8 @@ const pbox3_inv = [8, 0, 11, 12, 1, 7, 6, 15, 4, 2, 9, 3, 13, 14, 10, 5];
 
 const multiplier = new Uint8Array([
   90, 97, 64, 16, 30, 20, 46, 54, 204, 131, 13, 6, 160, 47, 40, 26,
+]);
+
+const adder = new Uint8Array([
+  96, 235, 99, 214, 8, 129, 193, 231, 124, 102, 158, 134, 164, 108, 154, 93,
 ]);
