@@ -18,10 +18,11 @@ export class MeongCipher implements Cipher {
 
   encrypt(plaintext: Uint8Array): Uint8Array {
     let result = plaintext;
+    result = permute2(result);
 
     for (let i = 0; i < N_ROUND; i++) {
       result = subtitute(result);
-      result = permute1(result);
+      result = permute3(result);
 
       let [left, right] = splitBlock(result);
       left = shiftFunction(left, "right", 4);
@@ -31,17 +32,17 @@ export class MeongCipher implements Cipher {
       right = xorArray(right, this.mixFunction(i, left));
 
       result = mergeBlock([right, left]);
-      result = permute2(result);
     }
 
+    result = permute1(result);
     return result;
   }
 
   decrypt(ciphertext: Uint8Array): Uint8Array {
     let result = ciphertext;
+    result = permute1Inv(result);
 
     for (let i = N_ROUND - 1; i >= 0; i--) {
-      result = permute2Inv(result);
       let [left, right] = splitBlock(result);
 
       left = xorArray(left, this.mixFunction(i, right));
@@ -55,10 +56,11 @@ export class MeongCipher implements Cipher {
 
       result = mergeBlock([leftArray, rightArray]);
 
-      result = permute1Inv(result);
+      result = permute3Inv(result);
       result = subtituteInv(result);
     }
 
+    result = permute2Inv(result);
     return result;
   }
 
@@ -170,7 +172,7 @@ export function packBit(data: number[]): Uint8Array {
   return result;
 }
 
-export function permute(data: Uint8Array, map: number[]): Uint8Array {
+export function permuteBit(data: Uint8Array, map: number[]): Uint8Array {
   if (data.length != 16) {
     throw new Error("Invalid data length");
   }
@@ -189,20 +191,41 @@ export function permute(data: Uint8Array, map: number[]): Uint8Array {
   return result;
 }
 
+export function permuteByte(data: Uint8Array, map: number[]): Uint8Array {
+  if (data.length != 16) {
+    throw new Error("Invalid data length");
+  }
+
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    result[i] = data[map[i]];
+  }
+
+  return result;
+}
+
 export function permute1(data: Uint8Array): Uint8Array {
-  return permute(data, pbox1);
+  return permuteBit(data, pbox1);
 }
 
 export function permute1Inv(data: Uint8Array): Uint8Array {
-  return permute(data, pbox1_inv);
+  return permuteBit(data, pbox1_inv);
 }
 
 export function permute2(data: Uint8Array): Uint8Array {
-  return permute(data, pbox2);
+  return permuteBit(data, pbox2);
 }
 
 export function permute2Inv(data: Uint8Array): Uint8Array {
-  return permute(data, pbox2_inv);
+  return permuteBit(data, pbox2_inv);
+}
+
+export function permute3(data: Uint8Array): Uint8Array {
+  return permuteByte(data, pbox3);
+}
+
+export function permute3Inv(data: Uint8Array): Uint8Array {
+  return permuteByte(data, pbox3_inv);
 }
 
 const sbox = [
@@ -282,6 +305,9 @@ const pbox2_inv = [
   19, 105, 58, 90, 69, 82, 123, 127, 100, 114, 98, 117, 5, 93, 118, 20, 126, 75,
   85, 14, 38, 110, 41, 22, 7, 106, 88, 66, 68, 71, 78, 119, 33, 9,
 ];
+
+const pbox3 = [1, 4, 9, 11, 8, 15, 6, 5, 0, 10, 14, 2, 3, 12, 13, 7];
+const pbox3_inv = [8, 0, 11, 12, 1, 7, 6, 15, 4, 2, 9, 3, 13, 14, 10, 5];
 
 const multiplier = new Uint8Array([
   90, 97, 64, 16, 30, 20, 46, 54, 204, 131, 13, 6, 160, 47, 40, 26,

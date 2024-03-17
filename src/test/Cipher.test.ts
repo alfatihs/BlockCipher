@@ -84,7 +84,7 @@ describe("Meong cipher test", () => {
       new Array(16).fill(0).map((_) => Math.floor(Math.random() * 256))
     );
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1_000; i++) {
       const encrypted = cipher.encrypt(data);
       expect(encrypted.length).toBe(16);
       expect(encrypted).not.toStrictEqual(data);
