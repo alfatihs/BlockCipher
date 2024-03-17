@@ -175,13 +175,18 @@ export function permute(data: Uint8Array, map: number[]): Uint8Array {
     throw new Error("Invalid data length");
   }
 
-  const unpack = unpackBit(data);
-  const result = new Array(unpack.length);
-  for (let i = 0; i < map.length; i++) {
-    result[i] = unpack[map[i]];
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      const newPos = map[i * 8 + j];
+      const newIdx = Math.floor(newPos / 8);
+      const newBit = newPos % 8;
+
+      result[newIdx] |= ((data[i] >> j) & 0x1) << newBit;
+    }
   }
 
-  return packBit(result);
+  return result;
 }
 
 export function permute1(data: Uint8Array): Uint8Array {

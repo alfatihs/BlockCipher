@@ -213,9 +213,9 @@ describe("Subtitute function test", () => {
 
 describe("Permutation test", () => {
   it("shoud able to permute using permute1 function", () => {
-    const data = new Uint8Array(
-      new Array(16).fill(0).map((_) => Math.floor(Math.random() * 256))
-    );
+    const data = new Uint8Array([
+      9, 246, 89, 89, 54, 27, 232, 166, 142, 89, 51, 248, 94, 216, 197, 242,
+    ]);
 
     const result = permute1(data);
     expect(result.length).toBe(16);
