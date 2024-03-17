@@ -11,7 +11,6 @@ import {
   mergeBlock,
   MeongCipher,
 } from "@/lib/cipher/MeongCipher";
-import * as mathjs from "mathjs";
 
 describe("Meong cipher test", () => {
   it("shoud able to encrypt and decrypt", () => {
