@@ -75,7 +75,7 @@ describe("Meong cipher test", () => {
     expect(decrypted).toStrictEqual(data);
   });
 
-  it.skip("performance test", () => {
+  it("performance test", () => {
     const key = new Uint8Array(
       new Array(16).fill(0).map((_) => Math.floor(Math.random() * 256))
     );
@@ -191,7 +191,7 @@ describe("Round key generation test", () => {
     }
 
     const result = roundKeyGeneration(masterKey);
-    expect(result.length).toBe(16);
+    expect(result.length).toBe(10);
   });
 });
 

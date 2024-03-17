@@ -1,11 +1,12 @@
-import { multiplyMatrixMod } from "../Matrix";
+import { xorArray } from "../ArrayUtil";
+import { matrixMultiplication, multiplyMatrixMod } from "../Matrix";
 import { Cipher } from "./Cipher";
 import * as mathjs from "mathjs";
 
 const N_ROUND = 10;
 
 export class MeongCipher implements Cipher {
-  private keys: mathjs.Matrix[];
+  private keys: Uint8Array[];
 
   constructor(masterkey: Uint8Array) {
     if (masterkey.length != 16) {
@@ -26,32 +27,10 @@ export class MeongCipher implements Cipher {
       left = shiftFunction(left, "right", 4);
       right = shiftFunction(right, "left", 4);
 
-      let leftMatrix = mathjs.reshape(
-        mathjs.matrix(
-          left.reduce((prev, val) => {
-            prev.push(val);
-            return prev;
-          }, [] as number[])
-        ),
-        [2, 4]
-      );
-      let rightMatrix = mathjs.reshape(
-        mathjs.matrix(
-          right.reduce((prev, val) => {
-            prev.push(val);
-            return prev;
-          }, [] as number[])
-        ),
-        [2, 4]
-      );
+      left = xorArray(left, this.mixFunction(i, right));
+      right = xorArray(right, this.mixFunction(i, left));
 
-      leftMatrix = xorMatrix(leftMatrix, this.mixFunction(i, rightMatrix));
-      rightMatrix = xorMatrix(rightMatrix, this.mixFunction(i, leftMatrix));
-
-      const leftArray = matrixToUint8Array(leftMatrix);
-      const rightArray = matrixToUint8Array(rightMatrix);
-
-      result = mergeBlock([rightArray, leftArray]);
+      result = mergeBlock([right, left]);
       result = permute2(result);
     }
 
@@ -63,32 +42,13 @@ export class MeongCipher implements Cipher {
 
     for (let i = N_ROUND - 1; i >= 0; i--) {
       result = permute2Inv(result);
-      const [left, right] = splitBlock(result);
+      let [left, right] = splitBlock(result);
 
-      let leftMatrix = mathjs.reshape(
-        mathjs.matrix(
-          left.reduce((prev, val) => {
-            prev.push(val);
-            return prev;
-          }, [] as number[])
-        ),
-        [2, 4]
-      );
-      let rightMatrix = mathjs.reshape(
-        mathjs.matrix(
-          right.reduce((prev, val) => {
-            prev.push(val);
-            return prev;
-          }, [] as number[])
-        ),
-        [2, 4]
-      );
+      left = xorArray(left, this.mixFunction(i, right));
+      right = xorArray(right, this.mixFunction(i, left));
 
-      leftMatrix = xorMatrix(leftMatrix, this.mixFunction(i, rightMatrix));
-      rightMatrix = xorMatrix(rightMatrix, this.mixFunction(i, leftMatrix));
-
-      let rightArray = matrixToUint8Array(leftMatrix);
-      let leftArray = matrixToUint8Array(rightMatrix);
+      let rightArray = left;
+      let leftArray = right;
 
       leftArray = shiftFunction(leftArray, "left", 4);
       rightArray = shiftFunction(rightArray, "right", 4);
@@ -102,25 +62,13 @@ export class MeongCipher implements Cipher {
     return result;
   }
 
-  private mixFunction(iteration: number, block: mathjs.Matrix): mathjs.Matrix {
-    return mathjs.multiply(block, this.keys[iteration]).map((val) => val % 256);
+  private mixFunction(iteration: number, block: Uint8Array): Uint8Array {
+    return matrixMultiplication(block, this.keys[iteration]);
   }
 }
 
 export function matrixToUint8Array(matrix: mathjs.Matrix): Uint8Array {
   return new Uint8Array(mathjs.reshape(matrix, [8]).toArray() as number[]);
-}
-
-export function xorMatrix(a: mathjs.Matrix, b: mathjs.Matrix): mathjs.Matrix {
-  const result = mathjs.matrix(mathjs.zeros(a.size()[0], a.size()[1]));
-
-  for (let i = 0; i < a.size()[0]; i++) {
-    for (let j = 0; j < a.size()[1]; j++) {
-      result.set([i, j], a.get([i, j]) ^ b.get([i, j]));
-    }
-  }
-
-  return result;
 }
 
 export function splitBlock(data: Uint8Array): Uint8Array[] {
@@ -145,15 +93,12 @@ export function mergeBlock(data: Uint8Array[]): Uint8Array {
   return result;
 }
 
-export function roundKeyGeneration(masterKey: Uint8Array): mathjs.Matrix[] {
-  const result = [] as mathjs.Matrix[];
-  const bytecodes = [] as number[];
-
-  masterKey.forEach((byte) => bytecodes.push(byte));
-  let key = mathjs.reshape(mathjs.matrix(bytecodes), [4, 4]);
+export function roundKeyGeneration(masterKey: Uint8Array): Uint8Array[] {
+  const result = [] as Uint8Array[];
+  let key = masterKey;
 
   for (let i = 0; i < N_ROUND; i++) {
-    key = multiplyMatrixMod(multiplier, key, 256);
+    key = matrixMultiplication(multiplier, key);
     result.push(key);
   }
 
@@ -333,9 +278,6 @@ const pbox2_inv = [
   85, 14, 38, 110, 41, 22, 7, 106, 88, 66, 68, 71, 78, 119, 33, 9,
 ];
 
-const multiplier = mathjs.matrix([
-  [90, 97, 64, 16],
-  [30, 20, 46, 54],
-  [204, 131, 13, 6],
-  [160, 47, 40, 26],
+const multiplier = new Uint8Array([
+  90, 97, 64, 16, 30, 20, 46, 54, 204, 131, 13, 6, 160, 47, 40, 26,
 ]);
