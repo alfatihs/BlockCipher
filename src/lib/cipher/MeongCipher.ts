@@ -96,7 +96,7 @@ export function roundKeyGeneration(masterKey: Uint8Array): Uint8Array[] {
 
   for (let i = 0; i < N_ROUND; i++) {
     key = matrixMultiplication(multiplier, key).map(
-      (v, i) => v + (adder[i] % 256)
+      (v, i) => (adder[i] ^ v) % 256
     );
     result.push(key);
   }
