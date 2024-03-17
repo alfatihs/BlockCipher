@@ -79,3 +79,17 @@ export function getCofactorMatrix(matrix: number[][]): math.Matrix {
 
   return math.matrix(cofactor);
 }
+
+export function matrixMultiplication(mat1: Uint8Array, mat2: Uint8Array) {
+  const result = new Uint8Array(8);
+  for (let i = 0; i < 2; i++) {
+    for (let j = 0; j < 4; j++) {
+      let sum = 0;
+      for (let k = 0; k < 4; k++) {
+        sum += mat1[i * 4 + k] * mat2[k * 4 + j];
+      }
+      result[i * 4 + j] = sum % 256;
+    }
+  }
+  return result;
+}
