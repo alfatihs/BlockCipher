@@ -45,3 +45,26 @@ export function packBit(data: number[]): Uint8Array {
 
   return result;
 }
+
+export function splitUint8Array(data: Uint8Array, size: number): Uint8Array[] {
+  const result = [] as Uint8Array[];
+
+  for (let i = 0; i < data.length; i += size) {
+    result.push(data.slice(i, i + size));
+  }
+
+  return result;
+}
+
+export function mergeUint8Array(data: Uint8Array[]): Uint8Array {
+  const size = data.reduce((acc, curr) => acc + curr.length, 0);
+  const result = new Uint8Array(size);
+
+  let offset = 0;
+  for (const arr of data) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+
+  return result;
+}

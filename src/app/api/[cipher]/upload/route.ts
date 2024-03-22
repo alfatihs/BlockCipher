@@ -50,10 +50,10 @@ export async function POST(
     const file = await decryptFile(cipher, payload.file, payload.key);
 
     if (downloadFile) {
-      return new NextResponse(file.result, {
+      return new NextResponse(file, {
         status: 200,
         headers: {
-          "Content-Disposition": `attachment; filename=${file.filename}`,
+          "Content-Disposition": `attachment; filename=result.dec`,
           "Content-Type": "application/octet-stream",
         },
       });
@@ -63,8 +63,8 @@ export async function POST(
           status: "success",
           message: "File received.",
           data: {
-            file: Buffer.from(file.result).toString("base64"),
-            filename: file.filename,
+            file: Buffer.from(file).toString("base64"),
+            filename: "result.dec",
           },
         },
         { status: 200 }

@@ -26,31 +26,17 @@ export async function encryptFile(
   type: CipherType,
   file: File,
   key: string
-): Promise<string> {
+): Promise<Buffer> {
   const buffer = await file.arrayBuffer();
-  const filename = file.name;
 
   const data = utilFileEncrypt(type, key, Buffer.from(buffer));
-  const payload = {
-    filename,
-    data,
-  };
-
-  return Buffer.from(JSON.stringify(payload), "utf-8").toString("base64");
+  return Buffer.from(data);
 }
 
 export async function decryptFile(type: CipherType, file: File, key: string) {
   const buffer = await file.arrayBuffer();
-  const stringBuffer = Buffer.from(buffer).toString("utf-8");
+  const payload = Buffer.from(buffer);
 
-  const { filename, data } = JSON.parse(
-    Buffer.from(stringBuffer, "base64").toString("utf-8")
-  );
-
-  const result = utilFileDecrypt(type, key, data);
-
-  return {
-    result,
-    filename,
-  };
+  const result = utilFileDecrypt(type, key, payload);
+  return Buffer.from(result);
 }

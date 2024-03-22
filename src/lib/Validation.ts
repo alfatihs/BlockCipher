@@ -8,24 +8,20 @@ export interface UploadPayload {
 }
 
 export function getCipher(cipher: string) {
-  // switch (cipher) {
-  //   case "hill":
-  //     return CipherType.Hill;
-  //   case "super":
-  //     return CipherType.SuperEncryption;
-  //   case "affine":
-  //     return CipherType.Affine;
-  //   case "playfair":
-  //     return CipherType.Playfair;
-  //   case "vigenere":
-  //     return CipherType.VigenereStandard;
-  //   case "vigenere-extended":
-  //     return CipherType.VigenereExtended;
-  //   case "vigenere-autokey":
-  //     return CipherType.VigenereAutokey;
-  //   default:
-  //     throw new ValidationError("Invalid cipher.");
-  // }
+  switch (cipher) {
+    case CipherType.CBC:
+      return CipherType.CBC;
+    case CipherType.CFB:
+      return CipherType.CFB;
+    case CipherType.CTR:
+      return CipherType.CTR;
+    case CipherType.ECB:
+      return CipherType.ECB;
+    case CipherType.OFB:
+      return CipherType.OFB;
+    default:
+      throw new ValidationError("Invalid cipher.");
+  }
 }
 
 export function getAndValidateUpload(formData: FormData): UploadPayload {
