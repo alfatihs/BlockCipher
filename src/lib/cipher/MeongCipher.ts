@@ -24,8 +24,6 @@ export class MeongCipher implements Cipher {
       result = permute3(result);
 
       let [left, right] = splitBlock(result);
-      left = shiftFunction(left, "right", 4);
-      right = shiftFunction(right, "left", 4);
 
       left = xorArray(left, this.mixFunction(i, right));
       right = xorArray(right, this.mixFunction(i, left));
@@ -49,9 +47,6 @@ export class MeongCipher implements Cipher {
 
       let rightArray = left;
       let leftArray = right;
-
-      leftArray = shiftFunction(leftArray, "left", 4);
-      rightArray = shiftFunction(rightArray, "right", 4);
 
       result = mergeBlock([leftArray, rightArray]);
 
