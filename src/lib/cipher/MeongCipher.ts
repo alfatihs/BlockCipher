@@ -1,6 +1,202 @@
-import { multiplyMatrixMod } from "../Matrix";
+import { xorArray } from "../ArrayUtil";
+import { matrixMultiplication } from "../Matrix";
 import { Cipher } from "./Cipher";
-import mathjs from "mathjs";
+
+const N_ROUND = 10;
+
+export class MeongCipher implements Cipher {
+  private keys: Uint8Array[];
+
+  constructor(masterkey: Uint8Array) {
+    if (masterkey.length != 16) {
+      throw new Error("Invalid key length");
+    }
+
+    this.keys = roundKeyGeneration(masterkey);
+  }
+
+  encrypt(plaintext: Uint8Array): Uint8Array {
+    let result = plaintext;
+    result = permute2(result);
+
+    for (let i = 0; i < N_ROUND; i++) {
+      result = subtitute(result);
+      result = permute3(result);
+
+      let [left, right] = splitBlock(result);
+
+      left = xorArray(left, this.mixFunction(i, right));
+      right = xorArray(right, this.mixFunction(i, left));
+
+      result = mergeBlock([right, left]);
+    }
+
+    result = permute1(result);
+    return result;
+  }
+
+  decrypt(ciphertext: Uint8Array): Uint8Array {
+    let result = ciphertext;
+    result = permute1Inv(result);
+
+    for (let i = N_ROUND - 1; i >= 0; i--) {
+      let [left, right] = splitBlock(result);
+
+      left = xorArray(left, this.mixFunction(i, right));
+      right = xorArray(right, this.mixFunction(i, left));
+
+      let rightArray = left;
+      let leftArray = right;
+
+      result = mergeBlock([leftArray, rightArray]);
+
+      result = permute3Inv(result);
+      result = subtituteInv(result);
+    }
+
+    result = permute2Inv(result);
+    return result;
+  }
+
+  private mixFunction(iteration: number, block: Uint8Array): Uint8Array {
+    return matrixMultiplication(block, this.keys[iteration]);
+  }
+}
+
+export function splitBlock(data: Uint8Array): Uint8Array[] {
+  const result = [] as Uint8Array[];
+
+  for (let i = 0; i < data.length; i += data.length / 2) {
+    result.push(data.slice(i, i + data.length / 2));
+  }
+
+  return result;
+}
+
+export function mergeBlock(data: Uint8Array[]): Uint8Array {
+  const length = data[0].length ?? (data[0] as any).size[0];
+  const result = new Uint8Array(data.length * length);
+
+  for (let i = 0; i < data.length; i++) {
+    const dataArray = data[i];
+    result.set(dataArray, i * data[0].length);
+  }
+
+  return result;
+}
+
+export function roundKeyGeneration(masterKey: Uint8Array): Uint8Array[] {
+  const result = [] as Uint8Array[];
+  let key = masterKey;
+
+  for (let i = 0; i < N_ROUND; i++) {
+    key = matrixMultiplication(multiplier, key).map(
+      (v, i) => (adder[i] ^ v) % 256
+    );
+    result.push(key);
+  }
+
+  return result;
+}
+
+export function shiftFunction(
+  data: Uint8Array,
+  direction: "left" | "right",
+  rowsize: number
+): Uint8Array {
+  const result = new Uint8Array(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    const rowNum = Math.floor(i / rowsize);
+    const startRowIdx = rowNum * rowsize;
+
+    const rowShift = rowNum;
+
+    if (direction === "left") {
+      result[i] = data[(((i % rowsize) + rowShift) % rowsize) + startRowIdx];
+    } else {
+      result[i] = data[startRowIdx + ((rowsize + i - rowShift) % rowsize)];
+    }
+  }
+
+  return result;
+}
+
+export function subtitute(data: Uint8Array): Uint8Array {
+  const result = new Uint8Array(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    result[i] = sbox[data[i]];
+  }
+
+  return result;
+}
+
+export function subtituteInv(data: Uint8Array): Uint8Array {
+  const result = new Uint8Array(data.length);
+
+  for (let i = 0; i < data.length; i++) {
+    result[i] = sbox_inv[data[i]];
+  }
+
+  return result;
+}
+
+export function permuteBit(data: Uint8Array, map: number[]): Uint8Array {
+  if (data.length != 16) {
+    throw new Error("Invalid data length");
+  }
+
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      const newPos = map[i * 8 + j];
+      const newIdx = Math.floor(newPos / 8);
+      const newBit = newPos % 8;
+
+      result[newIdx] |= ((data[i] >> j) & 0x1) << newBit;
+    }
+  }
+
+  return result;
+}
+
+export function permuteByte(data: Uint8Array, map: number[]): Uint8Array {
+  if (data.length != 16) {
+    throw new Error("Invalid data length");
+  }
+
+  const result = new Uint8Array(data.length);
+  for (let i = 0; i < data.length; i++) {
+    result[i] = data[map[i]];
+  }
+
+  return result;
+}
+
+export function permute1(data: Uint8Array): Uint8Array {
+  return permuteBit(data, pbox1);
+}
+
+export function permute1Inv(data: Uint8Array): Uint8Array {
+  return permuteBit(data, pbox1_inv);
+}
+
+export function permute2(data: Uint8Array): Uint8Array {
+  return permuteBit(data, pbox2);
+}
+
+export function permute2Inv(data: Uint8Array): Uint8Array {
+  return permuteBit(data, pbox2_inv);
+}
+
+export function permute3(data: Uint8Array): Uint8Array {
+  return permuteByte(data, pbox3);
+}
+
+export function permute3Inv(data: Uint8Array): Uint8Array {
+  return permuteByte(data, pbox3_inv);
+}
 
 const sbox = [
   124, 203, 90, 83, 14, 107, 22, 39, 20, 206, 45, 8, 24, 191, 247, 43, 193, 58,
@@ -80,69 +276,13 @@ const pbox2_inv = [
   85, 14, 38, 110, 41, 22, 7, 106, 88, 66, 68, 71, 78, 119, 33, 9,
 ];
 
-const multiplier = mathjs.matrix([
-  [90, 97, 64, 16],
-  [30, 20, 46, 54],
-  [204, 131, 13, 6],
-  [160, 47, 40, 26],
+const pbox3 = [1, 4, 9, 11, 8, 15, 6, 5, 0, 10, 14, 2, 3, 12, 13, 7];
+const pbox3_inv = [8, 0, 11, 12, 1, 7, 6, 15, 4, 2, 9, 3, 13, 14, 10, 5];
+
+const multiplier = new Uint8Array([
+  90, 97, 64, 16, 30, 20, 46, 54, 204, 131, 13, 6, 160, 47, 40, 26,
 ]);
 
-const N_ROUND = 16;
-
-export class MeongCipher implements Cipher {
-  private keys: mathjs.Matrix[];
-
-  constructor(key: Uint8Array) {
-    if (key.length != 16) {
-      throw new Error("Invalid key length");
-    }
-
-    this.keys = this.roundKeyGeneration(key);
-  }
-
-  encrypt(plaintext: Uint8Array): Uint8Array {
-    throw new Error("Method not implemented.");
-  }
-
-  decrypt(ciphertext: Uint8Array): Uint8Array {
-    throw new Error("Method not implemented.");
-  }
-
-  private roundKeyGeneration(masterKey: Uint8Array): mathjs.Matrix[] {
-    const result = [] as mathjs.Matrix[];
-    const bytecodes = [] as number[];
-
-    masterKey.forEach((byte) => bytecodes.push(byte));
-    let key = mathjs.matrix(bytecodes);
-
-    for (let i = 0; i < N_ROUND; i++) {
-      key = multiplyMatrixMod(multiplier, key, 256);
-      result.push(key);
-    }
-
-    return result;
-  }
-
-  private mixFunction(iteration: number, block: mathjs.Matrix): mathjs.Matrix {
-    return mathjs.multiply(block, this.keys[iteration]);
-  }
-
-  private shiftFunction(
-    data: Uint8Array,
-    direction: "left" | "right",
-    rowsize: number
-  ): Uint8Array {
-    const result = new Uint8Array(data.length);
-
-    for (let i = 0; i < data.length; i++) {
-      const rowNum = Math.floor(i / rowsize);
-      const index =
-        direction === "left"
-          ? rowsize - (i % rowsize)
-          : i + (rowsize % rowsize);
-      result[i] = data[index];
-    }
-
-    return result;
-  }
-}
+const adder = new Uint8Array([
+  96, 235, 99, 214, 8, 129, 193, 231, 124, 102, 158, 134, 164, 108, 154, 93,
+]);

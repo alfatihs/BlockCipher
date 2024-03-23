@@ -1,6 +1,10 @@
 import { CipherType } from "./CipherType";
+import { ValidationError } from "./ValidationError";
+import { CTRBlock } from "./block/counter";
 import { Cipher } from "./cipher/Cipher";
+import { MeongCipher } from "./cipher/MeongCipher";
 import { encodeString } from "./encoder/Encoder";
+import { Padding } from "./encoder/Padding";
 
 export function encryptFromString(
   type: CipherType,
@@ -47,15 +51,43 @@ export function decryptToString(
 export function decryptFile(
   type: CipherType,
   key: string,
-  encryptedFile: string
+  encryptedFile: Buffer
 ): Buffer {
-  const buffer = Buffer.from(encryptedFile);
   const cipher = getCipher(type, key);
-  const result = cipher.decrypt(buffer);
+  const result = cipher.decrypt(encryptedFile);
 
   return Buffer.from(result);
 }
 
 export function getCipher(type: CipherType, key: string): Cipher {
-  return null!!;
+  const masterKey = masterKeyGenerator(key);
+  const cipher = new MeongCipher(masterKey);
+
+  switch (type) {
+    case CipherType.CTR:
+      return new CTRBlock(cipher);
+    default:
+      throw new ValidationError("Invalid block type");
+  }
+}
+
+export function numberToUint8Array(num: number, byteSize: number) {
+  const result = new Uint8Array(byteSize);
+
+  for (let i = 0; i < byteSize; i++) {
+    result[i] = (num >> (i * 8)) & 0xff;
+  }
+
+  return result;
+}
+
+export function masterKeyGenerator(key: string) {
+  const keyBuffer = encodeString(key).slice(0, 16);
+
+  if (keyBuffer.length != 16) {
+    const pad = new Padding(16, 0, 256);
+    return pad.pad(keyBuffer);
+  }
+
+  return keyBuffer;
 }
