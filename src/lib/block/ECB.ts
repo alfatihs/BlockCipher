@@ -1,9 +1,11 @@
 import { Cipher } from "../cipher/Cipher";
 import { flattenUint8Array } from "../ArrayUtil";
 import { Padding } from "../encoder/Padding";
-export default abstract class ECB implements Cipher {
+export default class ECB implements Cipher {
   private BLOCK_SIZE = 16; //ukuran block 128 bit
   padding = new Padding(16, 0, 256);
+
+  constructor(private blockCipher: Cipher) {}
 
   encrypt(plaintext: Uint8Array): Uint8Array {
     const encryptedBytes: Uint8Array[] = [];
@@ -17,7 +19,7 @@ export default abstract class ECB implements Cipher {
         added_plaintext.length
       );
       const currentBlock = plaintext.slice(blockStart, blockEnd);
-      const encryptedBlock = this.encryptBlock(currentBlock);
+      const encryptedBlock = this.blockCipher.encrypt(currentBlock);
       encryptedBytes.push(encryptedBlock);
     }
     return flattenUint8Array(encryptedBytes);
@@ -34,14 +36,11 @@ export default abstract class ECB implements Cipher {
         ciphertext.length
       );
       const currentBlock = ciphertext.slice(blockStart, blockEnd);
-      const decryptedBlock = this.decryptBlock(currentBlock);
+      const decryptedBlock = this.blockCipher.decrypt(currentBlock);
       decryptedBytes.push(decryptedBlock);
     }
     //belum dikasih unpad
     const flatten_bytes = flattenUint8Array(decryptedBytes);
     return this.padding.unpad(flatten_bytes);
   }
-
-  abstract encryptBlock(block: Uint8Array): Uint8Array;
-  abstract decryptBlock(block: Uint8Array): Uint8Array;
 }

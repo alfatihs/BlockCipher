@@ -4,10 +4,12 @@ import { Padding } from "../encoder/Padding";
 import { xorArray } from "../ArrayUtil";
 import { IV } from "./const";
 
-export default abstract class CFB implements Cipher {
+export default class CFB implements Cipher {
   padding = new Padding(16, 0, 256);
   private BLOCK_SIZE = 16; //ukuran block 128 bit
   private r_bit_size: number = 1;
+
+  constructor(private blockCipher: Cipher) {}
 
   encrypt(plaintext: Uint8Array): Uint8Array {
     var added_plain_text = this.padding.pad(plaintext);
@@ -22,7 +24,7 @@ export default abstract class CFB implements Cipher {
         plaintext.length
       );
       let currentMiniBlock = plaintext.slice(miniBlockStart, miniBlockEnd);
-      let encrypted_reg: Uint8Array = this.encryptBlock(register);
+      let encrypted_reg: Uint8Array = this.blockCipher.encrypt(register);
       let miniEcnryptedReg = encrypted_reg.slice(0, currentMiniBlock.length);
       let c1 = xorArray(currentMiniBlock, miniEcnryptedReg);
       encryptedBytes.push(c1);
@@ -40,7 +42,7 @@ export default abstract class CFB implements Cipher {
     // var XOR_Factor = IV;
 
     for (let i = 0; i < numIterations; i++) {
-      const encryptedReg = this.encryptBlock(register);
+      const encryptedReg = this.blockCipher.encrypt(register);
       const miniEcnryptedReg = encryptedReg.slice(0, this.r_bit_size);
       const miniBlockStart = i * this.r_bit_size;
       const miniBlockEnd = Math.min(
@@ -58,7 +60,4 @@ export default abstract class CFB implements Cipher {
     const flatten_array = flattenUint8Array(decryptedBytes);
     return this.padding.unpad(flatten_array);
   }
-
-  abstract encryptBlock(block: Uint8Array): Uint8Array;
-  abstract decryptBlock(block: Uint8Array): Uint8Array;
 }

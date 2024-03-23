@@ -4,9 +4,12 @@ import { Padding } from "../encoder/Padding";
 import { xorArray } from "../ArrayUtil";
 import { IV } from "./const";
 
-export default abstract class CBC implements Cipher {
+export default class CBC implements Cipher {
   padding = new Padding(16, 0, 256);
   private BLOCK_SIZE = 16; //ukuran block 128 bit
+
+  constructor(private blockCipher: Cipher) {}
+
   encrypt(plaintext: Uint8Array): Uint8Array {
     //belum dikasih padding
     var XOR_Factor: Uint8Array = IV;
@@ -19,7 +22,7 @@ export default abstract class CBC implements Cipher {
       const blockEnd = Math.min(blockStart + this.BLOCK_SIZE, plaintext.length);
       const currentBlock = plaintext.slice(blockStart, blockEnd);
       const xor_result = xorArray(currentBlock, XOR_Factor);
-      const encryptedBlock = this.encryptBlock(xor_result);
+      const encryptedBlock = this.blockCipher.encrypt(xor_result);
       XOR_Factor = encryptedBlock;
       encryptedBytes.push(encryptedBlock);
     }
@@ -38,7 +41,7 @@ export default abstract class CBC implements Cipher {
         ciphertext.length
       );
       const currentBlock = ciphertext.slice(blockStart, blockEnd);
-      const decryptedBlock = this.decryptBlock(currentBlock);
+      const decryptedBlock = this.blockCipher.decrypt(currentBlock);
       const xor_result = xorArray(decryptedBlock, XOR_Factor);
       XOR_Factor = currentBlock;
       decryptedBytes.push(xor_result);
@@ -47,7 +50,4 @@ export default abstract class CBC implements Cipher {
     const flatten_bytes = flattenUint8Array(decryptedBytes);
     return this.padding.unpad(flatten_bytes);
   }
-
-  abstract encryptBlock(block: Uint8Array): Uint8Array;
-  abstract decryptBlock(block: Uint8Array): Uint8Array;
 }
