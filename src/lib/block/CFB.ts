@@ -1,6 +1,5 @@
 import { Cipher } from "../cipher/Cipher";
 import { flattenUint8Array } from "../ArrayUtil";
-import { encodeString } from "../encoder/Encoder";
 import { Padding } from "../encoder/Padding";
 import { xorArray } from "../ArrayUtil";
 import { IV } from "./const";
@@ -27,7 +26,7 @@ export default abstract class CFB implements Cipher {
       let miniEcnryptedReg = encrypted_reg.slice(0, currentMiniBlock.length);
       let c1 = xorArray(currentMiniBlock, miniEcnryptedReg);
       encryptedBytes.push(c1);
-      register.copyWithin(0, currentMiniBlock.length); //shifting left
+      register.copyWithin(0, c1.length); //shifting left
       register[register.length - 1] = c1[0];
     }
     return flattenUint8Array(encryptedBytes);
@@ -41,21 +40,23 @@ export default abstract class CFB implements Cipher {
     // var XOR_Factor = IV;
 
     for (let i = 0; i < numIterations; i++) {
-      const encryptedBlock = this.encryptBlock(register);
+      const encryptedReg = this.encryptBlock(register);
+      const miniEcnryptedReg = encryptedReg.slice(0, this.r_bit_size);
       const miniBlockStart = i * this.r_bit_size;
       const miniBlockEnd = Math.min(
         miniBlockStart + this.r_bit_size,
         ciphertext.length
       );
       const currentMiniBlock = ciphertext.slice(miniBlockStart, miniBlockEnd);
-      const xor_result = xorArray(encryptedBlock, currentMiniBlock);
+      const xor_result = xorArray(miniEcnryptedReg, currentMiniBlock);
 
       decryptedBytes.push(xor_result);
       register.copyWithin(0, currentMiniBlock.length);
       register[register.length - 1] = currentMiniBlock[0];
     }
 
-    return flattenUint8Array(decryptedBytes);
+    const flatten_array = flattenUint8Array(decryptedBytes);
+    return this.padding.unpad(flatten_array);
   }
 
   abstract encryptBlock(block: Uint8Array): Uint8Array;

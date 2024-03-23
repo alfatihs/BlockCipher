@@ -12,7 +12,7 @@ export default abstract class CBC implements Cipher {
     var XOR_Factor: Uint8Array = IV;
     var added_plaintext = this.padding.pad(plaintext);
     const numBlocks = Math.ceil(added_plaintext.length / this.BLOCK_SIZE);
-    const encryptedBytes: Uint8Array[] = [];
+    let encryptedBytes: Uint8Array[] = [];
 
     for (let i = 0; i < numBlocks; i++) {
       const blockStart = i * this.BLOCK_SIZE;
@@ -44,7 +44,8 @@ export default abstract class CBC implements Cipher {
       decryptedBytes.push(xor_result);
     }
 
-    return flattenUint8Array(decryptedBytes);
+    const flatten_bytes = flattenUint8Array(decryptedBytes);
+    return this.padding.unpad(flatten_bytes);
   }
 
   abstract encryptBlock(block: Uint8Array): Uint8Array;
