@@ -2,7 +2,6 @@ import { decryptFile, encryptFile } from "@/controller/CipherController";
 import { getAndValidateUpload, getCipher } from "@/lib/Validation";
 import { ValidationError } from "@/lib/ValidationError";
 import { NextRequest, NextResponse } from "next/server";
-
 export async function POST(
   req: NextRequest,
   { params }: { params: { cipher: string } }

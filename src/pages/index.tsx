@@ -22,6 +22,7 @@ import {
   encryptStringApi,
 } from "@/api/api";
 import { AxiosError } from "axios";
+import { start } from "repl";
 
 export default function Homepage() {
   const [inputType, setInputType] = useState("text");
@@ -32,12 +33,14 @@ export default function Homepage() {
   const [file, setFile] = useState<File | null>(null);
   const toast = useToast();
   const [loading, setLoading] = useState(false);
+  const [execTime, setExecTime] = useState(0);
 
   const handleInputChange = (event: any) => {
     setInputValue(event.target.value);
   };
 
   const handleEncrypt = async () => {
+    const startTime = new Date().getTime();
     try {
       setLoading(true);
       if (inputType === "text") {
@@ -47,8 +50,12 @@ export default function Homepage() {
         await encryptFileApi(encryptionType, key, file);
       }
       setLoading(false);
+      const endTime = new Date().getTime();
+      setExecTime(endTime - startTime);
     } catch (e) {
       setLoading(false);
+      const endTime = new Date().getTime();
+      setExecTime(endTime - startTime);
       if (e instanceof AxiosError) {
         toast({
           status: "error",
@@ -67,6 +74,7 @@ export default function Homepage() {
   };
 
   const handleDecrypt = async () => {
+    const startTime = new Date().getTime();
     try {
       setLoading(true);
       if (inputType === "text") {
@@ -76,8 +84,12 @@ export default function Homepage() {
         await decryptFileApi(encryptionType, key, file);
       }
       setLoading(false);
+      const endTime = new Date().getTime();
+      setExecTime(endTime - startTime);
     } catch (e) {
       setLoading(false);
+      const endTime = new Date().getTime();
+      setExecTime(endTime - startTime);
       if (e instanceof AxiosError) {
         toast({
           status: "error",
@@ -105,7 +117,7 @@ export default function Homepage() {
   return (
     <ChakraProvider>
       <Box p={4}>
-        <Heading mb={4}>Classic Cipher</Heading>
+        <Heading mb={4}>Block Cipher</Heading>
         <Text mb={4}>by: Azmi Alfatih Shalahuddin 13520158</Text>
         <Text mb={4}>and Bayu Samudra 13520128</Text>
 
@@ -180,6 +192,10 @@ export default function Homepage() {
           </Button>
         </Flex>
         <Box mt={5}>
+          <Heading as="h2" size="md">
+            Waktu Eksekusi
+          </Heading>
+          <Text>Execution Time : {execTime} ms</Text>
           <Heading as="h2" size="md">
             Hasil
           </Heading>

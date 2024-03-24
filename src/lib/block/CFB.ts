@@ -6,11 +6,8 @@ import { IV } from "./const";
 
 export default class CFB implements Cipher {
   padding = new Padding(16, 0, 256);
-  private BLOCK_SIZE = 16; //ukuran block 128 bit
   private r_bit_size: number = 1;
-
   constructor(private blockCipher: Cipher) {}
-
   encrypt(plaintext: Uint8Array): Uint8Array {
     var added_plain_text = this.padding.pad(plaintext);
 

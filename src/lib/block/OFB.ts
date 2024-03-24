@@ -8,9 +8,7 @@ import { flatten } from "mathjs";
 export class OFB implements Cipher {
   padding = new Padding(16, 0, 256);
   private r_bit_size: number = 1;
-
   constructor(private blockCipher: Cipher) {}
-
   encrypt(plaintext: Uint8Array): Uint8Array {
     var added_plain_text = this.padding.pad(plaintext);
     let register: Uint8Array = IV.slice();
