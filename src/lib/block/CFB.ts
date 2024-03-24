@@ -13,7 +13,8 @@ export default class CFB implements Cipher {
 
   encrypt(plaintext: Uint8Array): Uint8Array {
     var added_plain_text = this.padding.pad(plaintext);
-    let register: Uint8Array = IV;
+
+    let register: Uint8Array = IV.slice();
     let encryptedBytes: Uint8Array[] = [];
     const numIterations = added_plain_text.length / this.r_bit_size;
 
@@ -21,9 +22,12 @@ export default class CFB implements Cipher {
       const miniBlockStart = i * this.r_bit_size;
       const miniBlockEnd = Math.min(
         miniBlockStart + this.r_bit_size,
-        plaintext.length
+        added_plain_text.length
       );
-      let currentMiniBlock = plaintext.slice(miniBlockStart, miniBlockEnd);
+      let currentMiniBlock = added_plain_text.slice(
+        miniBlockStart,
+        miniBlockEnd
+      );
       let encrypted_reg: Uint8Array = this.blockCipher.encrypt(register);
       let miniEcnryptedReg = encrypted_reg.slice(0, currentMiniBlock.length);
       let c1 = xorArray(currentMiniBlock, miniEcnryptedReg);
@@ -35,14 +39,14 @@ export default class CFB implements Cipher {
   }
 
   decrypt(ciphertext: Uint8Array): Uint8Array {
-    let register: Uint8Array = IV;
+    let registerDecrypt: Uint8Array = IV.slice();
     const decryptedBytes: Uint8Array[] = [];
     const numIterations = Math.ceil(ciphertext.length / this.r_bit_size);
 
     // var XOR_Factor = IV;
 
     for (let i = 0; i < numIterations; i++) {
-      const encryptedReg = this.blockCipher.encrypt(register);
+      const encryptedReg = this.blockCipher.encrypt(registerDecrypt);
       const miniEcnryptedReg = encryptedReg.slice(0, this.r_bit_size);
       const miniBlockStart = i * this.r_bit_size;
       const miniBlockEnd = Math.min(
@@ -53,8 +57,8 @@ export default class CFB implements Cipher {
       const xor_result = xorArray(miniEcnryptedReg, currentMiniBlock);
 
       decryptedBytes.push(xor_result);
-      register.copyWithin(0, currentMiniBlock.length);
-      register[register.length - 1] = currentMiniBlock[0];
+      registerDecrypt.copyWithin(0, currentMiniBlock.length);
+      registerDecrypt[registerDecrypt.length - 1] = currentMiniBlock[0];
     }
 
     const flatten_array = flattenUint8Array(decryptedBytes);

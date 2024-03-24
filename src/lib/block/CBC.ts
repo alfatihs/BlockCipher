@@ -19,8 +19,11 @@ export default class CBC implements Cipher {
 
     for (let i = 0; i < numBlocks; i++) {
       const blockStart = i * this.BLOCK_SIZE;
-      const blockEnd = Math.min(blockStart + this.BLOCK_SIZE, plaintext.length);
-      const currentBlock = plaintext.slice(blockStart, blockEnd);
+      const blockEnd = Math.min(
+        blockStart + this.BLOCK_SIZE,
+        added_plaintext.length
+      );
+      const currentBlock = added_plaintext.slice(blockStart, blockEnd);
       const xor_result = xorArray(currentBlock, XOR_Factor);
       const encryptedBlock = this.blockCipher.encrypt(xor_result);
       XOR_Factor = encryptedBlock;

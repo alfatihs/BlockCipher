@@ -18,7 +18,7 @@ export default class ECB implements Cipher {
         blockStart + this.BLOCK_SIZE,
         added_plaintext.length
       );
-      const currentBlock = plaintext.slice(blockStart, blockEnd);
+      const currentBlock = added_plaintext.slice(blockStart, blockEnd);
       const encryptedBlock = this.blockCipher.encrypt(currentBlock);
       encryptedBytes.push(encryptedBlock);
     }
