@@ -22,3 +22,11 @@ Untuk menjalankan _environment_ development, dapat menjalankan perintah:
 ```sh
 npm run dev
 ```
+
+Untuk Melakukan Pemrosesan
+1. Pilih Block Mode untuk Pemrosesan (CBC, ECB, CFB, OFB, Counter)
+2. Pilih Tipe Masukan (Text/File)
+3. Masukkan Teks atau Unggah File untuk diproses
+4. Masukkan Kunci
+5. Tekan tombol "Encrypt" (untuk enkripsi) dan "Decrypt" (untuk dekripsi)
+6. Selesai. Hasil Pemrosesan dan Waktu Eksekusi akan ditampilkan dibawah. Pemrosesan file akan menyebabkan browser secara otomatis mengunduh file hasil pemrosesan
