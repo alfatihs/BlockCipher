@@ -11,7 +11,6 @@ export default class CBC implements Cipher {
   constructor(private blockCipher: Cipher) {}
 
   encrypt(plaintext: Uint8Array): Uint8Array {
-    //belum dikasih padding
     var XOR_Factor: Uint8Array = IV;
     var added_plaintext = this.padding.pad(plaintext);
     const numBlocks = Math.ceil(added_plaintext.length / this.BLOCK_SIZE);
